@@ -1,2 +1,10 @@
-*lock.y[a]ml
-release.sh
+.eslintrc.js
+.gitignore
+.npmignore
+CHANGELOG.md
+jest.config.js
+tsconfig.json
+src
+.idea
+.vscode
+.release-it.json
