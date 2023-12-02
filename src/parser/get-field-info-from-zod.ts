@@ -1,5 +1,6 @@
 import type { ZodNumberCheck } from "zod";
 import {
+  ZodAny,
   ZodArray,
   ZodBoolean,
   ZodDate,
@@ -19,7 +20,7 @@ import { typeContainers } from "../containers";
 import { ClassType } from "@nestjs/graphql/dist/enums/class-type.enum";
 import { ZodTypeInfo } from "../types";
 import { GraphQLISODateTime, Int } from "@nestjs/graphql";
-import { GraphQLUUID } from "graphql-scalars";
+import { GraphQLJSON, GraphQLUUID } from "graphql-scalars";
 
 export function getFieldInfoFromZod(
   key: string,
@@ -140,6 +141,13 @@ export function getFieldInfoFromZod(
       isNullable: prop.isNullable(),
       isOptional: prop.isOptional(),
       isEnum: true,
+      description,
+    };
+  } else if (isZodInstance(ZodAny, prop)) {
+    return {
+      type: GraphQLJSON,
+      isNullable: prop.isNullable(),
+      isOptional: prop.isOptional(),
       description,
     };
   } else {

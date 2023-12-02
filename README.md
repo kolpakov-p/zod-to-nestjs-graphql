@@ -12,9 +12,13 @@ Package exports three functions:
 
 ## Important notes
 
+### Naming
+
 The GraphQL schema became very powerful when types it consist have comprehensive and understandable names.
 To achieve that, we need a fully manageable way to deal with types naming.
 And this package insists that way – every single operation requires you to provide explicit name for type.
+
+### Declarations order
 
 The order in which functions are called is important. You must start from the most nested type/enum and go through the least ones.
 
@@ -23,12 +27,13 @@ The order in which functions are called is important. You must start from the mo
 * `z.date()` type maps to `GraphQLISODateTime` (from `@nestjs/graphql`).
 * `z.string().uuid()` type maps to `GraphQLUUID` (from `graphql-scalars`).
 * `z.number().int()` type maps to `Int` (from `@nestjs/graphql`).
+* `z.any()` type maps to `GraphQLJSON` (from `graphql-scalars`).
 
 Coming to enums, only “native enum” is supported as of now.
 
 ## Examples
 
-Image you have the following contracts:
+Imagine that you have the following contracts:
 
 ```typescript
 import { z } from 'zod'
@@ -48,11 +53,12 @@ const UserEntity = z.object({
   name: z.string().describe('User name.'),
   age: z.number().int().describe('User age.'),
   authType: AuthType,
-  country: CountryContract
+  country: CountryContract,
+  dataBin: z.any()
 })
 ```
 
-To buckle them up to NestJS's GraphQL, you need just:
+To buckle them up to NestJS's GraphQL, you just need to:
 
 ```typescript
 import { AuthType, CountryEntity, UserEntity } from 'contracts.ts'
@@ -112,5 +118,7 @@ type User {
     authType: AuthType!
 
     country: Country!
+    
+    dataBin: GraphQLJSON!
 }
 ```
