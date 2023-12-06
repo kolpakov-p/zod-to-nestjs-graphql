@@ -14,13 +14,15 @@ import {
   ZodString,
   ZodTransformer,
   ZodTypeAny,
+  ZodLiteral,
+  ZodUnion,
 } from "zod";
 import { isZodInstance } from "../helpers";
 import { typeContainers } from "../containers";
 import { ClassType } from "@nestjs/graphql/dist/enums/class-type.enum";
 import { ZodTypeInfo } from "../types";
 import { GraphQLISODateTime, Int } from "@nestjs/graphql";
-import { GraphQLJSON, GraphQLUUID } from "graphql-scalars";
+import { GraphQLBigInt, GraphQLJSON, GraphQLUUID } from "graphql-scalars";
 
 export function getFieldInfoFromZod(
   key: string,
@@ -58,6 +60,7 @@ export function getFieldInfoFromZod(
       description,
     };
   }
+
   if (isZodInstance(ZodString, prop)) {
     return {
       type: prop.isUUID ? GraphQLUUID : String,
@@ -146,6 +149,62 @@ export function getFieldInfoFromZod(
   } else if (isZodInstance(ZodAny, prop)) {
     return {
       type: GraphQLJSON,
+      isNullable: prop.isNullable(),
+      isOptional: prop.isOptional(),
+      description,
+    };
+  } else if (isZodInstance(ZodLiteral, prop)) {
+    // Due to GraphQL specification does not declare literal types, just casting Zod literals to the nearest
+    // appropriate type.
+
+    if (typeof prop.value === "boolean") {
+      return {
+        type: Boolean,
+        isOptional: prop.isOptional(),
+        isNullable: prop.isNullable(),
+        description,
+      };
+    }
+
+    if (typeof prop.value === "bigint") {
+      return {
+        type: GraphQLBigInt,
+        isOptional: prop.isOptional(),
+        isNullable: prop.isNullable(),
+        description,
+      };
+    }
+
+    if (typeof prop.value === "number") {
+      return {
+        type: Number,
+        isOptional: prop.isOptional(),
+        isNullable: prop.isNullable(),
+        description,
+      };
+    }
+
+    // Cast to “String” by default.
+    return {
+      type: String,
+      isOptional: prop.isOptional(),
+      isNullable: prop.isNullable(),
+      description,
+    };
+  } else if (isZodInstance(ZodUnion, prop)) {
+    const unionsContainer = typeContainers["Union"];
+    // TODO
+    // @ts-ignore
+    const preregisteredUnion = unionsContainer.get(prop);
+
+    if (!preregisteredUnion) {
+      throw new Error(
+        `Nested union assigned to key “${key}” is not properly registered. Please register it before you register the type it nested in.`,
+      );
+    }
+
+    return {
+      type: preregisteredUnion,
       isNullable: prop.isNullable(),
       isOptional: prop.isOptional(),
       description,

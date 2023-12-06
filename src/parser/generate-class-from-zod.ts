@@ -16,7 +16,7 @@ export const generateClassFromZod = <T extends AnyZodObject>(
     );
   }
 
-  // Getting types container in according to root class type.
+  // Get types container in according to root class type.
   const container = typeContainers[rootClassType];
 
   //region Duplication guard.
