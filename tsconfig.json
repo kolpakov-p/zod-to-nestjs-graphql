@@ -9,7 +9,6 @@
     "baseUrl": ".",
     "declaration": true,
     "emitDeclarationOnly": false,
-    "sourceMap": true,
     "outDir": "./dist",
     "newLine": "lf",
     "esModuleInterop": true,

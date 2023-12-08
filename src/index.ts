@@ -38,6 +38,7 @@ export const registerZodEnumType = <T extends ZodNativeEnum<any>>(
  * ***Please ensure that we have registered all elements of union (using `generateObjectTypeFromZod`) before you call this method.***
  *
  * Due to GraphQL does not support unions on InputTypes, so this method operates ObjectTypes only.
+ * @link https://github.com/graphql/graphql-spec/issues/488
  */
 export const generateUnionTypeFromZod = <T extends ZodUnion<any>>(
   zodUnion: T,
@@ -53,6 +54,8 @@ export const generateUnionTypeFromZod = <T extends ZodUnion<any>>(
   for (const unionElementIndex in zodUnion.options) {
     const unionElement = zodUnion.options[unionElementIndex];
 
+    // GraphQL support only Object types as union elements: https://spec.graphql.org/June2018/#sec-Unions
+    // Throwing an error if the element is not an object.
     if (!isZodInstance(ZodObject, unionElement)) {
       throw new Error(`Union must contain only objects (“z.object({ ... })”).`);
     }
