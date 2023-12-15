@@ -1,4 +1,9 @@
-import { type AnyZodObject, type ZodNativeEnum, type ZodUnion, ZodObject } from "zod";
+import {
+  type AnyZodObject,
+  type ZodNativeEnum,
+  type ZodUnion,
+  ZodObject,
+} from "zod";
 import { TypeMetadata } from "./types";
 import { ClassType } from "@nestjs/graphql/dist/enums/class-type.enum";
 import { generateClassFromZod } from "./parser";
