@@ -16,13 +16,19 @@ import {
   ZodTypeAny,
   ZodLiteral,
   ZodUnion,
+  ZodRecord,
 } from "zod";
 import { isZodInstance } from "../helpers";
 import { typeContainers } from "../containers";
 import { ClassType } from "@nestjs/graphql/dist/enums/class-type.enum";
 import { ZodTypeInfo } from "../types";
 import { GraphQLISODateTime, Int } from "@nestjs/graphql";
-import { GraphQLBigInt, GraphQLJSON, GraphQLUUID } from "graphql-scalars";
+import {
+  GraphQLBigInt,
+  GraphQLJSON,
+  GraphQLJSONObject,
+  GraphQLUUID,
+} from "graphql-scalars";
 
 export function getFieldInfoFromZod(
   key: string,
@@ -205,6 +211,13 @@ export function getFieldInfoFromZod(
 
     return {
       type: preregisteredUnion,
+      isNullable: prop.isNullable(),
+      isOptional: prop.isOptional(),
+      description,
+    };
+  } else if (isZodInstance(ZodRecord, prop)) {
+    return {
+      type: GraphQLJSONObject,
       isNullable: prop.isNullable(),
       isOptional: prop.isOptional(),
       description,
