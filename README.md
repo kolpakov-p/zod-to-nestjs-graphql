@@ -28,6 +28,9 @@ The order in which functions are called is important. You must start from the mo
 * `z.string().uuid()` type maps to `GraphQLUUID` (from `graphql-scalars`).
 * `z.number().int()` type maps to `Int` (from `@nestjs/graphql`).
 * `z.any()` type maps to `GraphQLJSON` (from `graphql-scalars`).
+  But be careful using it, because **`z.any()` is always optional** due to zod architecture.
+  And it will remain the same even in generated GraphQL schema.
+* `z.record()` type (with all the arguments) maps to `GraphQLJSONObject` (from `graphql-scalars`).
 
 Coming to enums, only “native enum” is supported as of now.
 
@@ -54,7 +57,8 @@ const UserEntity = z.object({
   age: z.number().int().describe('User age.'),
   authType: AuthType,
   country: CountryContract,
-  dataBin: z.any()
+  dataBin: z.any(),
+  someAmorphousData: z.record(z.string(), z.any())
 })
 ```
 
@@ -119,6 +123,9 @@ type User {
 
     country: Country!
     
-    dataBin: GraphQLJSON!
+    # Will remain optional anyway.     
+    dataBin: GraphQLJSON
+
+    someAmorphousData: GraphQLJSONObject!
 }
 ```
