@@ -1,5 +1,6 @@
 import { ZodObject, ZodType } from "zod";
 import { NullableList } from "@nestjs/graphql";
+import { replacementContainers } from "../containers";
 import { generateDefaults } from "../helpers";
 import { getFieldInfoFromZod } from "./get-field-info-from-zod";
 import { isZodInstance } from "../helpers";
@@ -48,7 +49,21 @@ function parseSingleShape<T extends ZodType>(
   input: T,
   rootClassType: ClassType,
 ): ParsedField {
-  const elementType = getFieldInfoFromZod(key, input, rootClassType);
+  let elementType: ZodTypeInfo;
+
+  //region Replaces member if specified.
+  const replacementsContainer = replacementContainers[rootClassType];
+  // TODO
+  // @ts-ignore
+  const replacement = replacementsContainer.get(input);
+
+  if (replacement) {
+    elementType = getFieldInfoFromZod(key, replacement, rootClassType);
+  }
+  //endregion
+  else {
+    elementType = getFieldInfoFromZod(key, input, rootClassType);
+  }
 
   const { type: fieldType, description } = elementType;
 
