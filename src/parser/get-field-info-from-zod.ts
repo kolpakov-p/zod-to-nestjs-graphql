@@ -19,7 +19,7 @@ import {
   ZodRecord,
 } from "zod";
 import { isZodInstance } from "../helpers";
-import { typeContainers } from "../containers";
+import { replacementContainers, typeContainers } from "../containers";
 import { ClassType } from "@nestjs/graphql/dist/enums/class-type.enum";
 import { ZodTypeInfo } from "../types";
 import { GraphQLISODateTime, Int } from "@nestjs/graphql";
@@ -37,6 +37,15 @@ export function getFieldInfoFromZod(
 ): ZodTypeInfo {
   // Getting field description.
   const description = prop.description;
+
+  const replacementContainer = replacementContainers[rootClassType];
+  // TODO
+  // @ts-ignore
+  const replacement = replacementContainer.get(prop);
+
+  if (replacement) {
+    return getFieldInfoFromZod(key, replacement, rootClassType);
+  }
 
   if (isZodInstance(ZodArray, prop)) {
     const data = getFieldInfoFromZod(key, prop.element, rootClassType);
