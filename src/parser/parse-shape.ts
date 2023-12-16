@@ -9,7 +9,7 @@ import { ParsedField, ZodTypeInfo } from "../types";
 
 export function parseShape<T extends ZodType>(
   zodInput: T,
-  rootClassType: ClassType,
+  rootClassType: ClassType.INPUT | ClassType.OBJECT,
 ): ParsedField[] {
   // Parsing an object shape.
   if (isZodInstance(ZodObject, zodInput)) {
@@ -47,14 +47,12 @@ export function determineNullability(
 function parseSingleShape<T extends ZodType>(
   key: string,
   input: T,
-  rootClassType: ClassType,
+  rootClassType: ClassType.OBJECT | ClassType.INPUT,
 ): ParsedField {
   let elementType: ZodTypeInfo;
 
   //region Replaces member if specified.
   const replacementsContainer = replacementContainers[rootClassType];
-  // TODO
-  // @ts-ignore
   const replacement = replacementsContainer.get(input);
 
   if (replacement) {

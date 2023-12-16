@@ -114,8 +114,6 @@ export const generateUnionTypeFromZod = <T extends ZodUnion<any>>(
       throw new Error(`Union must contain only objects (“z.object({ ... })”).`);
     }
 
-    // TODO
-    // @ts-ignore
     const existingType = objectTypesContainer.get(unionElement);
 
     if (!existingType) {

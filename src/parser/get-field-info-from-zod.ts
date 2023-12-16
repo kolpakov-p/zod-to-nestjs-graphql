@@ -110,8 +110,6 @@ export function getFieldInfoFromZod(
     }
 
     const typeContainer = typeContainers[rootClassType];
-    // TODO
-    // @ts-ignore
     const existingType = typeContainer.get(prop);
 
     if (!existingType) {
@@ -199,8 +197,6 @@ export function getFieldInfoFromZod(
     };
   } else if (isZodInstance(ZodUnion, prop)) {
     const unionsContainer = typeContainers["Union"];
-    // TODO
-    // @ts-ignore
     const preregisteredUnion = unionsContainer.get(prop);
 
     if (!preregisteredUnion) {
