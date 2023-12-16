@@ -1,13 +1,11 @@
 import { Field, InputType, ObjectType } from "@nestjs/graphql";
 import { parseShape } from "./index";
-import { AnyZodObject, TypeOf, ZodOptional } from "zod";
+import type { AnyZodObject, TypeOf } from "zod";
 import { TypeMetadata } from "../types";
 import { typeContainers } from "../containers";
 import { ClassType } from "@nestjs/graphql/dist/enums/class-type.enum";
 
-export const generateClassFromZod = <
-  T extends AnyZodObject | ZodOptional<AnyZodObject>,
->(
+export const generateClassFromZod = <T extends AnyZodObject>(
   input: T,
   metadata: TypeMetadata,
   rootClassType: ClassType,

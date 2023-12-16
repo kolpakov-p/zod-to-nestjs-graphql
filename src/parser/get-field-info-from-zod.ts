@@ -38,6 +38,7 @@ export function getFieldInfoFromZod(
   // Getting field description.
   const description = prop.description;
 
+  //region Replaces member if specified.
   const replacementContainer = replacementContainers[rootClassType];
   // TODO
   // @ts-ignore
@@ -46,6 +47,7 @@ export function getFieldInfoFromZod(
   if (replacement) {
     return getFieldInfoFromZod(key, replacement, rootClassType);
   }
+  //endregion
 
   if (isZodInstance(ZodArray, prop)) {
     const data = getFieldInfoFromZod(key, prop.element, rootClassType);

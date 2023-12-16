@@ -3,7 +3,6 @@ import {
   type ZodNativeEnum,
   type ZodUnion,
   ZodObject,
-  ZodOptional,
   ZodTypeAny,
 } from "zod";
 import { TypeMetadata, TypeRegistrationExtraOptions } from "./types";
@@ -38,9 +37,7 @@ export const replaceObjectTypeMember = <
   replacementContainers[ClassType.OBJECT].set(origin, replacement);
 };
 
-export const generateObjectTypeFromZod = <
-  T extends AnyZodObject | ZodOptional<AnyZodObject>,
->(
+export const generateObjectTypeFromZod = <T extends AnyZodObject>(
   input: T,
   metadata: TypeMetadata,
   extras?: TypeRegistrationExtraOptions,
@@ -61,9 +58,7 @@ export const generateObjectTypeFromZod = <
   return generateClassFromZod(input, metadata, ClassType.OBJECT);
 };
 
-export const generateInputTypeFromZod = <
-  T extends AnyZodObject | ZodOptional<AnyZodObject>,
->(
+export const generateInputTypeFromZod = <T extends AnyZodObject>(
   input: T,
   metadata: TypeMetadata,
   extras?: TypeRegistrationExtraOptions,
