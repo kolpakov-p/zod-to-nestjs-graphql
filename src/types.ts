@@ -1,4 +1,13 @@
 import { BaseTypeOptions } from "@nestjs/graphql";
+import { AnyZodObject, ZodTypeAny } from "zod";
+
+export type TypeRegistrationExtraOptions = {
+  additionalRegistrations?: Array<[AnyZodObject, TypeMetadata]>;
+  hotReplacements?: Array<{
+    origin: ZodTypeAny;
+    replacement: ZodTypeAny;
+  }>;
+};
 
 export type TypeMetadata = {
   name: string;

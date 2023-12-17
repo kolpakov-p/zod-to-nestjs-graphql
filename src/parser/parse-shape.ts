@@ -1,5 +1,6 @@
 import { ZodObject, ZodType } from "zod";
 import { NullableList } from "@nestjs/graphql";
+import { replacementContainers } from "../containers";
 import { generateDefaults } from "../helpers";
 import { getFieldInfoFromZod } from "./get-field-info-from-zod";
 import { isZodInstance } from "../helpers";
@@ -8,7 +9,7 @@ import { ParsedField, ZodTypeInfo } from "../types";
 
 export function parseShape<T extends ZodType>(
   zodInput: T,
-  rootClassType: ClassType,
+  rootClassType: ClassType.INPUT | ClassType.OBJECT,
 ): ParsedField[] {
   // Parsing an object shape.
   if (isZodInstance(ZodObject, zodInput)) {
@@ -46,9 +47,21 @@ export function determineNullability(
 function parseSingleShape<T extends ZodType>(
   key: string,
   input: T,
-  rootClassType: ClassType,
+  rootClassType: ClassType.OBJECT | ClassType.INPUT,
 ): ParsedField {
-  const elementType = getFieldInfoFromZod(key, input, rootClassType);
+  let elementType: ZodTypeInfo;
+
+  //region Replaces member if specified.
+  const replacementsContainer = replacementContainers[rootClassType];
+  const replacement = replacementsContainer.get(input);
+
+  if (replacement) {
+    elementType = getFieldInfoFromZod(key, replacement, rootClassType);
+  }
+  //endregion
+  else {
+    elementType = getFieldInfoFromZod(key, input, rootClassType);
+  }
 
   const { type: fieldType, description } = elementType;
 

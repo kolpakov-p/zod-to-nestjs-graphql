@@ -3,8 +3,9 @@ import {
   type ZodNativeEnum,
   type ZodUnion,
   ZodObject,
+  ZodTypeAny,
 } from "zod";
-import { TypeMetadata } from "./types";
+import { TypeMetadata, TypeRegistrationExtraOptions } from "./types";
 import { ClassType } from "@nestjs/graphql/dist/enums/class-type.enum";
 import { generateClassFromZod } from "./parser";
 import {
@@ -13,20 +14,66 @@ import {
   registerEnumType,
 } from "@nestjs/graphql";
 import { ResolveTypeFn } from "@nestjs/graphql/dist/interfaces/resolve-type-fn.interface";
-import { typeContainers } from "./containers";
+import { replacementContainers, typeContainers } from "./containers";
 import { isZodInstance } from "./helpers";
+
+export const replaceInputTypeMember = <
+  T extends ZodTypeAny,
+  K extends ZodTypeAny,
+>(
+  origin: T,
+  replacement: K,
+) => {
+  replacementContainers[ClassType.INPUT].set(origin, replacement);
+};
+
+export const replaceObjectTypeMember = <
+  T extends ZodTypeAny,
+  K extends ZodTypeAny,
+>(
+  origin: T,
+  replacement: K,
+) => {
+  replacementContainers[ClassType.OBJECT].set(origin, replacement);
+};
 
 export const generateObjectTypeFromZod = <T extends AnyZodObject>(
   input: T,
   metadata: TypeMetadata,
+  extras?: TypeRegistrationExtraOptions,
 ) => {
+  if (extras?.hotReplacements) {
+    for (const { origin, replacement } of extras.hotReplacements) {
+      replaceObjectTypeMember(origin, replacement);
+    }
+  }
+
+  if (extras?.additionalRegistrations) {
+    for (const [type, metadata] of extras.additionalRegistrations) {
+      generateObjectTypeFromZod(type, metadata);
+    }
+  }
+
   return generateClassFromZod(input, metadata, ClassType.OBJECT);
 };
 
 export const generateInputTypeFromZod = <T extends AnyZodObject>(
   input: T,
   metadata: TypeMetadata,
+  extras?: TypeRegistrationExtraOptions,
 ) => {
+  if (extras?.hotReplacements) {
+    for (const { origin, replacement } of extras.hotReplacements) {
+      replaceInputTypeMember(origin, replacement);
+    }
+  }
+
+  if (extras?.additionalRegistrations) {
+    for (const [type, metadata] of extras.additionalRegistrations) {
+      generateInputTypeFromZod(type, metadata);
+    }
+  }
+
   return generateClassFromZod(input, metadata, ClassType.INPUT);
 };
 
@@ -50,7 +97,7 @@ export const generateUnionTypeFromZod = <T extends ZodUnion<any>>(
   metadata: TypeMetadata,
   resolveType?: ResolveTypeFn<any, any>,
 ) => {
-  // Get types container in according to root class type.
+  // Get types container accordingly to a root class type.
   const unionsContainer = typeContainers["Union"];
   const objectTypesContainer = typeContainers[ClassType.OBJECT];
 
@@ -65,8 +112,6 @@ export const generateUnionTypeFromZod = <T extends ZodUnion<any>>(
       throw new Error(`Union must contain only objects (“z.object({ ... })”).`);
     }
 
-    // TODO
-    // @ts-ignore
     const existingType = objectTypesContainer.get(unionElement);
 
     if (!existingType) {

@@ -1,6 +1,6 @@
 {
   "name": "zod-to-nestjs-graphql",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
