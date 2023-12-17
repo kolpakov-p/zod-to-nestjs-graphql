@@ -36,22 +36,26 @@ Coming to enums, only “native enum” is supported as of now.
 
 ## Examples
 
+### Basic usage
+
 Imagine that you have the following contracts:
 
 ```typescript
+// contracts.ts
+
 import { z } from 'zod'
 
-const AuthType = z.nativeEnum({
+export const AuthType = z.nativeEnum({
   EMAIL: 'EMAIL',
   PHONE: 'PHONE',
 } as const)
 
-const CountryEntity = z.object({
+export const CountryEntity = z.object({
   code: z.string(),
   name: z.string(),
 })
 
-const UserEntity = z.object({
+export const UserEntity = z.object({
   id: z.string().uuid(),
   name: z.string().describe('User name.'),
   age: z.number().int().describe('User age.'),
@@ -62,9 +66,11 @@ const UserEntity = z.object({
 })
 ```
 
-To buckle them up to NestJS's GraphQL, you just need to:
+To transform them up to GraphQL types suitable for NestJS, you need to:
 
 ```typescript
+// auth.types.ts
+
 import { AuthType, CountryEntity, UserEntity } from 'contracts.ts'
 import { registerZodEnumType, generateObjectTypeFromZod } from 'zod-to-nestjs-graphql'
 
@@ -86,7 +92,9 @@ export const User = generateObjectTypeFromZod(UserEntity, {
 ...then in your resolvers:
 
 ```typescript
-import { User } from 'types.ts'
+// auth.resolver.ts
+
+import { User } from 'auth.types.ts'
 
 @Resolver()
 export class AuthResolver {
@@ -97,7 +105,7 @@ export class AuthResolver {
 }
 ```
 
-And it will generate the following GraphQL schema:
+And it will produce the following GraphQL schema:
 
 ```graphql
 enum AuthType {
@@ -127,5 +135,134 @@ type User {
     dataBin: GraphQLJSON
 
     someAmorphousData: GraphQLJSONObject!
+}
+```
+
+### Advanced usage
+
+#### Registering multiple types at a time
+
+Let's take the same example above:
+
+```typescript
+// auth.types.ts
+
+import { AuthType, CountryEntity, UserEntity } from 'contracts.ts'
+import { registerZodEnumType, generateObjectTypeFromZod } from 'zod-to-nestjs-graphql'
+
+registerZodEnumType(AuthType, {
+  name: 'AuthType',
+});
+
+// Registering nested type first.
+export const Country = generateObjectTypeFromZod(CountryEntity, {
+  name: 'Country',
+  description: 'Country object.'
+});
+
+export const User = generateObjectTypeFromZod(UserEntity, {
+  name: 'User'
+});
+```
+
+Here we're registering `CountryEntity` type (as `Country`) because it's nested to `UserEntity`.
+
+In cases when you don't use a newly registered GraphQL type anywhere in resolvers (but you still need to register it),
+you could use the following construction:
+
+```typescript
+// auth.types.ts
+
+import { AuthType, CountryEntity, UserEntity } from 'contracts.ts'
+import { registerZodEnumType, generateObjectTypeFromZod } from 'zod-to-nestjs-graphql'
+
+registerZodEnumType(AuthType, {
+  name: 'AuthType',
+});
+
+export const User = generateObjectTypeFromZod(
+  UserEntity,
+  { name: 'User' },
+  {
+    // The order of registration is still important. Register most nested types first.
+    additionalRegistrations: [
+      [
+        Country,
+        {
+          name: 'Country',
+          description: 'Country object.'
+        }
+      ],
+    ],
+  }
+);
+```
+
+By this we get the same result as in the example above.
+
+#### Hot replacements
+
+Occasionally you will need to change the type on the fly.
+
+```typescript
+// contracts.ts
+
+import { z } from 'zod'
+
+export const NestedDataContract = z.object({
+  data: z.object({}),
+})
+
+// A contract with highly nesting.
+export const UserDataContract = z.object({
+  // Property that have many nested objects inside.
+  data: NestedDataContract,
+})
+
+export const UserEntity = z.object({
+  id: z.string().uuid(),
+  name: z.string().describe('User name.'),
+  data: UserDataContract,
+})
+```
+
+In case when you don't want to register all these nested types to GraphQL too, just replace it with more appropriate:
+
+```typescript
+// auth.types.ts
+
+import { AuthType, CountryEntity, UserEntity } from 'contracts.ts'
+import { registerZodEnumType, generateObjectTypeFromZod } from 'zod-to-nestjs-graphql'
+
+registerZodEnumType(AuthType, {
+  name: 'AuthType',
+});
+
+export const User = generateObjectTypeFromZod(
+  UserEntity,
+  { name: 'User' },
+  {
+    hotReplacements: [
+      {
+        // Replace value of “data” in “UserDataContract” (“NestedDataContract”)
+        origin: User.shape.data.shape.data,
+        // ...with just “GraphQLJSONObject”.
+        replacement: z.record(z.string(), z.any())
+      },
+    ],
+  }
+);
+```
+
+After this, the GraphQL schema would look like:
+
+```graphql
+type User {
+    id: UUID!
+  
+    """User name."""
+    name: String!
+
+    data: GraphQLJSONObject!
 }
 ```
