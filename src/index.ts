@@ -48,7 +48,6 @@ export const generateObjectTypeFromZod = <T extends AnyZodObject>(
     }
   }
 
-  // TODO: Make the order of registration irrelevant.
   if (extras?.additionalRegistrations) {
     for (const { type, ...metadata } of extras.additionalRegistrations) {
       generateObjectTypeFromZod(type, metadata);
@@ -69,7 +68,6 @@ export const generateInputTypeFromZod = <T extends AnyZodObject>(
     }
   }
 
-  // TODO: Make the order of registration irrelevant.
   if (extras?.additionalRegistrations) {
     for (const { type, ...metadata } of extras.additionalRegistrations) {
       generateInputTypeFromZod(type, metadata);
@@ -99,7 +97,7 @@ export const generateUnionTypeFromZod = <T extends ZodUnion<any>>(
   metadata: TypeMetadata,
   resolveType?: ResolveTypeFn<any, any>,
 ) => {
-  // Get types container in according to root class type.
+  // Get types container accordingly to a root class type.
   const unionsContainer = typeContainers["Union"];
   const objectTypesContainer = typeContainers[ClassType.OBJECT];
 
