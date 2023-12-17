@@ -202,7 +202,7 @@ By this we get the same result as in the example above.
 
 #### Hot replacements
 
-Occasionally you will need to change the type on the fly.
+Occasionally you will need to change the type on the fly. Let's take contracts with highly nested objects inside:
 
 ```typescript
 // contracts.ts
