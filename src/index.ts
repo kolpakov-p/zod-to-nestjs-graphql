@@ -49,7 +49,7 @@ export const generateObjectTypeFromZod = <T extends AnyZodObject>(
   }
 
   if (extras?.additionalRegistrations) {
-    for (const { type, ...metadata } of extras.additionalRegistrations) {
+    for (const [type, metadata] of extras.additionalRegistrations) {
       generateObjectTypeFromZod(type, metadata);
     }
   }
@@ -69,7 +69,7 @@ export const generateInputTypeFromZod = <T extends AnyZodObject>(
   }
 
   if (extras?.additionalRegistrations) {
-    for (const { type, ...metadata } of extras.additionalRegistrations) {
+    for (const [type, metadata] of extras.additionalRegistrations) {
       generateInputTypeFromZod(type, metadata);
     }
   }
