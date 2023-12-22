@@ -18,7 +18,7 @@ The GraphQL schema became very powerful when types it consist have comprehensive
 To achieve that, we need a fully manageable way to deal with types naming.
 And this package insists that way – every single operation requires you to provide explicit name for type.
 
-### Declarations order
+### Declaration order
 
 The order in which functions are called is important. You must start from the most nested type/enum and go through the least ones.
 
@@ -34,9 +34,7 @@ The order in which functions are called is important. You must start from the mo
 
 Coming to enums, only “native enum” is supported as of now.
 
-## Examples
-
-### Basic usage
+## Basic usage
 
 Imagine that you have the following contracts:
 
@@ -76,12 +74,6 @@ import { registerZodEnumType, generateObjectTypeFromZod } from 'zod-to-nestjs-gr
 
 registerZodEnumType(AuthType, {
   name: 'AuthType',
-});
-
-// Registering nested type first.
-export const Country = generateObjectTypeFromZod(CountryEntity, {
-  name: 'Country',
-  description: 'Country object.'
 });
 
 export const User = generateObjectTypeFromZod(UserEntity, {
@@ -138,25 +130,70 @@ type User {
 }
 ```
 
-### Advanced usage
+You don't need to worry about nested objects (like `CountryEntity` in `UserEntity`)
+because they're registered automatically (with auto-generated names). 
 
-#### Registering multiple types at a time
+## GraphQL types auto-registration and name generation
 
-Let's take the same example above:
+Types auto-registration is enabled by default.
+
+Let's take a case study based on the example above.
 
 ```typescript
 // auth.types.ts
 
-import { AuthType, CountryEntity, UserEntity } from 'contracts.ts'
-import { registerZodEnumType, generateObjectTypeFromZod } from 'zod-to-nestjs-graphql'
+// ...
 
-registerZodEnumType(AuthType, {
-  name: 'AuthType',
+export const User = generateObjectTypeFromZod(UserEntity, {
+  name: 'User',
 });
+```
 
-// Registering nested type first.
+`generateObjectTypeFromZod` here registers two objects.
+
+One is `UserEntity` which is transformed to GraphQL Object type with name `User`.
+Its name is explicitly supplied in the `name` option.
+
+Another one is `CountryEntity`.
+It nested to `UserEntity` object, in `country` key.
+Corresponding GraphQL Object type will be named `Country` –
+the name is generated based on the key name, first transformed to PascalCase
+(in according to GraphQL naming recommendations).
+
+A few more examples:
+
+```typescript
+export const Person = z.object({
+  country: CountryContract,           // Country
+  personalDetails: DetailsContract,   // PersonalDetails
+  misc_data: MiscContract             // MiscData
+})
+```
+
+## Advanced usage
+
+### Overriding auto-generated names of types
+
+From the example above:
+
+```typescript
+// auth.types.ts
+
+// ...
+
+export const User = generateObjectTypeFromZod(UserEntity, {
+  name: 'User'
+});
+```
+
+To override auto-generated name, register an object manually, before it happens automatically (before you will call `generateObjectTypeFromZod`):
+
+```typescript
+// auth.types.ts
+
+// Preliminary registering nested type to take full control of it.
 export const Country = generateObjectTypeFromZod(CountryEntity, {
-  name: 'Country',
+  name: 'MySpecialNameOfCountry',
   description: 'Country object.'
 });
 
@@ -165,20 +202,12 @@ export const User = generateObjectTypeFromZod(UserEntity, {
 });
 ```
 
-Here we're registering `CountryEntity` type (as `Country`) because it's nested to `UserEntity`.
-
-In cases when you don't use a newly registered GraphQL type anywhere in resolvers (but you still need to register it),
-you could use the following construction:
+Or, in cases if you don't use a newly registered GraphQL type anywhere in resolvers, there is one more way to do this:
 
 ```typescript
 // auth.types.ts
 
-import { AuthType, CountryEntity, UserEntity } from 'contracts.ts'
-import { registerZodEnumType, generateObjectTypeFromZod } from 'zod-to-nestjs-graphql'
-
-registerZodEnumType(AuthType, {
-  name: 'AuthType',
-});
+// ...
 
 export const User = generateObjectTypeFromZod(
   UserEntity,
@@ -189,7 +218,7 @@ export const User = generateObjectTypeFromZod(
       [
         Country,
         {
-          name: 'Country',
+          name: 'MySpecialNameOfCountry',
           description: 'Country object.'
         }
       ],
@@ -200,7 +229,7 @@ export const User = generateObjectTypeFromZod(
 
 By this we get the same result as in the example above.
 
-#### Hot replacements
+### Hot replacements
 
 Occasionally you will need to change the type on the fly. Let's take contracts with highly nested objects inside:
 

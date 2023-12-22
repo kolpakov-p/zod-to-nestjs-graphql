@@ -1,12 +1,21 @@
 import { BaseTypeOptions } from "@nestjs/graphql";
 import { AnyZodObject, ZodTypeAny } from "zod";
 
+export type NameGeneratorFunction = (
+  parentKey: string,
+  currentKey: string,
+) => string;
+
 export type TypeRegistrationExtraOptions = {
   additionalRegistrations?: Array<[AnyZodObject, TypeMetadata]>;
   hotReplacements?: Array<{
     origin: ZodTypeAny;
     replacement: ZodTypeAny;
   }>;
+  nestedObjectsAutoRegistration?: {
+    disable?: boolean;
+    typeNameGenerator?: NameGeneratorFunction;
+  };
 };
 
 export type TypeMetadata = {
