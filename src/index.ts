@@ -16,6 +16,7 @@ import {
 import { ResolveTypeFn } from "@nestjs/graphql/dist/interfaces/resolve-type-fn.interface";
 import { replacementContainers, typeContainers } from "./containers";
 import { isZodInstance } from "./helpers";
+import { preregisterNested } from "./helpers/preregister-nested";
 
 export const replaceInputTypeMember = <
   T extends ZodTypeAny,
@@ -54,6 +55,8 @@ export const generateObjectTypeFromZod = <T extends AnyZodObject>(
     }
   }
 
+  preregisterNested(input, ClassType.OBJECT, metadata.name);
+
   return generateClassFromZod(input, metadata, ClassType.OBJECT);
 };
 
@@ -73,6 +76,8 @@ export const generateInputTypeFromZod = <T extends AnyZodObject>(
       generateInputTypeFromZod(type, metadata);
     }
   }
+
+  preregisterNested(input, ClassType.INPUT, metadata.name);
 
   return generateClassFromZod(input, metadata, ClassType.INPUT);
 };
