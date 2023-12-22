@@ -1,50 +1,81 @@
 import { ClassType } from "@nestjs/graphql/dist/enums/class-type.enum";
-import { AnyZodObject, TypeOf, ZodObject, ZodOptional, ZodTypeAny } from "zod";
-import { generateClassFromZod, parseShape } from "../parser";
+import { AnyZodObject, ZodObject, ZodTypeAny } from "zod";
+import { typeContainers } from "../containers";
+import { generateClassFromZod } from "../parser";
 import { isZodInstance } from "./is-zod-instance";
+import { toPascalCase } from "js-convert-case";
+
+const objectTypeNameGenerator = (parentKey: string, currentKey: string) => {
+  return toPascalCase(parentKey) + toPascalCase(currentKey);
+};
+
+const inputTypeNameGenerator = (parentKey: string, currentKey: string) => {
+  return (
+    // Convert to PascalCase (just in case).
+    toPascalCase(parentKey)
+      // Remove “Input” suffix.
+      .replace(/Input$/, "") +
+    // Convert camelCase to PascalCase.
+    toPascalCase(currentKey) +
+    // Append “Input” suffix.
+    "Input"
+  );
+};
 
 export const preregisterNested = <T extends AnyZodObject>(
   input: T,
-  rootClassType: ClassType,
-  parentKeyName = "",
+  rootClassType: ClassType.OBJECT | ClassType.INPUT,
+  parentKeyName: string,
+  nameGenerator?: (parentKey: string, currentKey: string) => string,
 ) => {
-  // TODO: Skip already registered.
+  nameGenerator ??=
+    rootClassType === ClassType.OBJECT
+      ? objectTypeNameGenerator
+      : inputTypeNameGenerator;
+
+  const typesContainer = typeContainers[rootClassType];
 
   for (const [key, value] of Object.entries<ZodTypeAny>(input.shape)) {
-    if (isZodInstance(ZodObject, value)) {
-      // @ts-ignore
-      preregisterNested(value, rootClassType, `${parentKeyName}${key}`);
+    //region Finds an object type because it could be nested.
+    let type: ZodObject<any> | undefined;
 
-      generateClassFromZod(
-        // @ts-ignore
-        value,
-        {
-          name: `${parentKeyName}${key}`,
-        },
-        rootClassType,
-      );
+    if (isZodInstance(ZodObject, value)) {
+      type = value as ZodObject<any>;
     }
 
     if (
       value._def?.innerType &&
       isZodInstance(ZodObject, value._def.innerType)
     ) {
-      console.log(key, value._def.innerType);
-
-      // @ts-ignore
-      preregisterNested(
-        value._def.innerType,
-        rootClassType,
-        `${parentKeyName}${key}`,
-      );
-
-      generateClassFromZod(
-        value._def.innerType,
-        {
-          name: `${parentKeyName}${key}`,
-        },
-        rootClassType,
-      );
+      type = value._def?.innerType;
     }
+    //endregion
+
+    // Skip if there is no object (a primitive/scalar only).
+    if (!type) {
+      continue;
+    }
+
+    //region Skip if a type provided is already registered before.
+    const existingType = typesContainer.get(type);
+
+    if (existingType) {
+      continue;
+    }
+    //endregion
+
+    const newTypeName = nameGenerator(parentKeyName, key);
+
+    // Check and register objects nested in the current one.
+    preregisterNested(type, rootClassType, newTypeName, nameGenerator);
+
+    generateClassFromZod(
+      type,
+      {
+        name: newTypeName,
+        description: type.description,
+      },
+      rootClassType,
+    );
   }
 };
