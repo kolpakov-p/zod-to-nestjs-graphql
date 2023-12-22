@@ -55,7 +55,14 @@ export const generateObjectTypeFromZod = <T extends AnyZodObject>(
     }
   }
 
-  preregisterNested(input, ClassType.OBJECT, metadata.name);
+  if (!extras?.nestedObjectsAutoRegistration?.disable) {
+    preregisterNested(
+      input,
+      ClassType.OBJECT,
+      metadata.name,
+      extras?.nestedObjectsAutoRegistration?.typeNameGenerator,
+    );
+  }
 
   return generateClassFromZod(input, metadata, ClassType.OBJECT);
 };
@@ -77,7 +84,14 @@ export const generateInputTypeFromZod = <T extends AnyZodObject>(
     }
   }
 
-  preregisterNested(input, ClassType.INPUT, metadata.name);
+  if (!extras?.nestedObjectsAutoRegistration?.disable) {
+    preregisterNested(
+      input,
+      ClassType.INPUT,
+      metadata.name,
+      extras?.nestedObjectsAutoRegistration?.typeNameGenerator,
+    );
+  }
 
   return generateClassFromZod(input, metadata, ClassType.INPUT);
 };

@@ -2,6 +2,7 @@ import { ClassType } from "@nestjs/graphql/dist/enums/class-type.enum";
 import { AnyZodObject, ZodObject, ZodTypeAny } from "zod";
 import { typeContainers } from "../containers";
 import { generateClassFromZod } from "../parser";
+import { NameGeneratorFunction } from "../types";
 import { isZodInstance } from "./is-zod-instance";
 import { toPascalCase } from "js-convert-case";
 
@@ -26,7 +27,7 @@ export const preregisterNested = <T extends AnyZodObject>(
   input: T,
   rootClassType: ClassType.OBJECT | ClassType.INPUT,
   parentKeyName: string,
-  nameGenerator?: (parentKey: string, currentKey: string) => string,
+  nameGenerator?: NameGeneratorFunction,
 ) => {
   nameGenerator ??=
     rootClassType === ClassType.OBJECT
