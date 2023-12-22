@@ -1,7 +1,8 @@
 import { Field, InputType, ObjectType } from "@nestjs/graphql";
-import { parseShape } from "./index";
-import { AnyZodObject, TypeOf } from "zod";
-import { TypeMetadata } from "../types";
+import { isZodInstance } from "../helpers";
+import { parseShape } from "../parser";
+import { AnyZodObject, TypeOf, ZodObject, ZodTypeAny } from "zod";
+import { ParsedField, TypeMetadata } from "../types";
 import { typeContainers } from "../containers";
 import { ClassType } from "@nestjs/graphql/dist/enums/class-type.enum";
 
@@ -46,7 +47,17 @@ export const generateClassFromZod = <T extends AnyZodObject>(
     })(DynamicZodModel);
   }
 
-  const parsedFields = parseShape(input, rootClassType);
+  const parsedFields: ParsedField[] = [];
+
+  if (isZodInstance(ZodObject, input)) {
+    // Parsing an object shape.
+    for (const [key, value] of Object.entries<ZodTypeAny>(input.shape)) {
+      parsedFields.push(parseShape(key, value, rootClassType));
+    }
+  } else {
+    // Parsing a primitive value.
+    parsedFields.push(parseShape("", input, rootClassType));
+  }
 
   for (const {
     key,

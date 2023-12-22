@@ -1,27 +1,10 @@
-import { ZodObject, ZodType } from "zod";
+import { ZodType } from "zod";
 import { NullableList } from "@nestjs/graphql";
 import { replacementContainers } from "../containers";
 import { generateDefaults } from "../helpers";
 import { getFieldInfoFromZod } from "./get-field-info-from-zod";
-import { isZodInstance } from "../helpers";
 import { ClassType } from "@nestjs/graphql/dist/enums/class-type.enum";
 import { ParsedField, ZodTypeInfo } from "../types";
-
-export function parseShape<T extends ZodType>(
-  zodInput: T,
-  rootClassType: ClassType.INPUT | ClassType.OBJECT,
-): ParsedField[] {
-  // Parsing an object shape.
-  if (isZodInstance(ZodObject, zodInput)) {
-    return Object.entries(zodInput.shape).map(([key, value]) =>
-      parseSingleShape(key, value, rootClassType),
-    );
-  }
-
-  // Parsing a primitive shape.
-  const parsedShape = parseSingleShape("", zodInput, rootClassType);
-  return [parsedShape];
-}
 
 export function determineNullability(
   typeInfo: ZodTypeInfo,
@@ -44,7 +27,7 @@ export function determineNullability(
   return nullable;
 }
 
-function parseSingleShape<T extends ZodType>(
+export function parseShape<T extends ZodType>(
   key: string,
   input: T,
   rootClassType: ClassType.OBJECT | ClassType.INPUT,
