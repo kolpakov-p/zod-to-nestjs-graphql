@@ -107,7 +107,7 @@ export const registerZodEnumType = <
   input: T,
   metadata: EnumOptions<T["enum"]>,
 ) => {
-  // Prevent duplication.
+  // Prevent unexpected overrides.
   if (enumsContainer.get(input)) {
     return;
   }
