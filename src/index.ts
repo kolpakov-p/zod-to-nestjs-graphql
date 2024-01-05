@@ -112,7 +112,10 @@ export const registerZodEnumType = <
     return;
   }
 
-  // “.enum” generates a new object each call, so need to call it once.
+  // Object registered using `registerEnumType` must be exactly the same with one which will be passed within an Object/Input type further.
+  // Otherwise, NestJS couldn't be able to find enum for substitution which will cause failure.
+  // Zod's regular `enum` (not `nativeEnum`), generates a new object each time we call `.enum`.
+  // So that's the reason we call `.enum` exactly once and place the result to container.
   const declaration = input.enum;
 
   enumsContainer.set(input, declaration);
