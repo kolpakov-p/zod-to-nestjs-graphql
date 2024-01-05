@@ -4,6 +4,7 @@ import {
   type ZodUnion,
   ZodObject,
   ZodTypeAny,
+  ZodEnum,
 } from "zod";
 import { TypeMetadata, TypeRegistrationExtraOptions } from "./types";
 import { ClassType } from "@nestjs/graphql/dist/enums/class-type.enum";
@@ -14,7 +15,11 @@ import {
   registerEnumType,
 } from "@nestjs/graphql";
 import { ResolveTypeFn } from "@nestjs/graphql/dist/interfaces/resolve-type-fn.interface";
-import { replacementContainers, typeContainers } from "./containers";
+import {
+  enumsContainer,
+  replacementContainers,
+  typeContainers,
+} from "./containers";
 import { isZodInstance } from "./helpers";
 import { preregisterNested } from "./helpers/preregister-nested";
 
@@ -96,11 +101,22 @@ export const generateInputTypeFromZod = <T extends AnyZodObject>(
   return generateClassFromZod(input, metadata, ClassType.INPUT);
 };
 
-export const registerZodEnumType = <T extends ZodNativeEnum<any>>(
+export const registerZodEnumType = <
+  T extends ZodNativeEnum<any> | ZodEnum<any>,
+>(
   input: T,
   metadata: EnumOptions<T["enum"]>,
 ) => {
-  registerEnumType(input.enum, metadata);
+  // Prevent duplication.
+  if (enumsContainer.get(input)) {
+    return;
+  }
+
+  // “.enum” generates a new object each call, so need to call it once.
+  const declaration = input.enum;
+
+  enumsContainer.set(input, declaration);
+  registerEnumType(declaration, metadata);
 };
 
 /**

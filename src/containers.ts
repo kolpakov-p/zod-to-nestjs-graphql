@@ -1,4 +1,4 @@
-import { ZodTypeAny, ZodUnion } from "zod";
+import { ZodEnum, ZodNativeEnum, ZodTypeAny, ZodUnion } from "zod";
 import { ClassType } from "@nestjs/graphql/dist/enums/class-type.enum";
 
 export const typeContainers: {
@@ -18,3 +18,8 @@ export const replacementContainers: {
   [ClassType.INPUT]: new WeakMap<ZodTypeAny, ZodTypeAny>(),
   [ClassType.OBJECT]: new WeakMap<ZodTypeAny, ZodTypeAny>(),
 };
+
+export const enumsContainer: WeakMap<
+  ZodNativeEnum<any> | ZodEnum<any>,
+  { [k: string]: string }
+> = new WeakMap<ZodNativeEnum<any> | ZodEnum<any>, { [k: string]: string }>();

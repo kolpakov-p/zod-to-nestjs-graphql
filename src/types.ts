@@ -81,14 +81,6 @@ export interface ZodTypeInfo {
   isNullable: boolean;
 
   /**
-   * Indicates whether or not the property is an enum type.
-   *
-   * @type {boolean}
-   * @memberof ZodTypeInfo
-   */
-  isEnum?: boolean;
-
-  /**
    * Indicates whether or not the property is an object (another type).
    *
    * @type {boolean}
