@@ -122,9 +122,19 @@ export function getFieldInfoFromZod(
       isNullable: prop.isNullable(),
       description,
     };
+  // In order of backward compatibility, returning nativeEnum's declaration as-is.
+  // It's ok because the resulting object of `prop.enum` doesn't change each call.
   } else if (
-    isZodInstance(ZodEnum, prop) ||
     isZodInstance(ZodNativeEnum, prop)
+  ) {
+    return {
+      type: prop.enum,
+      isNullable: prop.isNullable(),
+      isOptional: prop.isOptional(),
+      description,
+    };
+  } else if (
+    isZodInstance(ZodEnum, prop)
   ) {
     const preregisteredDeclaration = enumsContainer.get(prop);
 
