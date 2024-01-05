@@ -19,7 +19,7 @@ import {
   ZodRecord,
 } from "zod";
 import { isZodInstance } from "../helpers";
-import { typeContainers } from "../containers";
+import { enumsContainer, typeContainers } from "../containers";
 import { ClassType } from "@nestjs/graphql/dist/enums/class-type.enum";
 import { ZodTypeInfo } from "../types";
 import { GraphQLISODateTime, Int } from "@nestjs/graphql";
@@ -43,7 +43,6 @@ export function getFieldInfoFromZod(
 
     const {
       type,
-      isEnum,
       isNullable: isItemNullable,
       isOptional: isItemOptional,
     } = data;
@@ -52,7 +51,6 @@ export function getFieldInfoFromZod(
       type: [type],
       isOptional: prop.isOptional(),
       isNullable: prop.isNullable(),
-      isEnum,
       isOfArray: true,
       isItemNullable,
       isItemOptional,
@@ -86,12 +84,11 @@ export function getFieldInfoFromZod(
       description,
     };
   } else if (isZodInstance(ZodOptional, prop)) {
-    const { type, isEnum, isOfArray, isItemNullable, isItemOptional } =
+    const { type, isOfArray, isItemNullable, isItemOptional } =
       getFieldInfoFromZod(key, prop.unwrap(), rootClassType);
 
     return {
       type,
-      isEnum,
       isOfArray,
       isItemNullable,
       isItemOptional,
@@ -129,11 +126,18 @@ export function getFieldInfoFromZod(
     isZodInstance(ZodEnum, prop) ||
     isZodInstance(ZodNativeEnum, prop)
   ) {
+    const preregisteredDeclaration = enumsContainer.get(prop);
+
+    if (!preregisteredDeclaration) {
+      throw new Error(
+        `Enumeration type assigned to key “${key}” is not properly registered. Please registered all nested enumeration types before you register the root one.`,
+      );
+    }
+
     return {
-      type: prop.enum,
+      type: preregisteredDeclaration,
       isNullable: prop.isNullable(),
       isOptional: prop.isOptional(),
-      isEnum: true,
       description,
     };
   } else if (isZodInstance(ZodDefault, prop)) {
@@ -147,7 +151,6 @@ export function getFieldInfoFromZod(
       type: GraphQLISODateTime,
       isNullable: prop.isNullable(),
       isOptional: prop.isOptional(),
-      isEnum: true,
       description,
     };
   } else if (isZodInstance(ZodAny, prop)) {

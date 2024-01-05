@@ -8,7 +8,7 @@ Inspired by [`nestjs-graphql-zod` package](https://github.com/incetarik/nestjs-g
 Package exports three functions:
 * `generateObjectTypeFromZod` – takes a `zod` contract and returns Object type.
 * `generateInputTypeFromZod` – takes a `zod` contract and returns Input type. 
-* `registerZodEnumType` – registers `zod`'s “native enum”.
+* `registerZodEnumType` – registers enumeration declared using `zod` (both `z.enum()` and `z.nativeEnum()`).
 
 ## Important notes
 
@@ -31,8 +31,6 @@ The order in which functions are called is important. You must start from the mo
   But be careful using it, because **`z.any()` is always optional** due to zod architecture.
   And it will remain the same even in generated GraphQL schema.
 * `z.record()` type (with all the arguments) maps to `GraphQLJSONObject` (from `graphql-scalars`).
-
-Coming to enums, only “native enum” is supported as of now.
 
 ## Basic usage
 
