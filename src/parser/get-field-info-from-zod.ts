@@ -17,9 +17,10 @@ import {
   ZodLiteral,
   ZodUnion,
   ZodRecord,
+  ZodDiscriminatedUnion,
 } from "zod";
 import { isZodInstance } from "../helpers";
-import { enumsContainer, typeContainers } from "../containers";
+import { enumsContainer, typeContainers, unionsContainer } from "../containers";
 import { ClassType } from "@nestjs/graphql/dist/enums/class-type.enum";
 import { ZodTypeInfo } from "../types";
 import { GraphQLISODateTime, Int } from "@nestjs/graphql";
@@ -122,20 +123,16 @@ export function getFieldInfoFromZod(
       isNullable: prop.isNullable(),
       description,
     };
-  // In order of backward compatibility, returning nativeEnum's declaration as-is.
-  // It's ok because the resulting object of `prop.enum` doesn't change each call.
-  } else if (
-    isZodInstance(ZodNativeEnum, prop)
-  ) {
+    // In order of backward compatibility, returning nativeEnum's declaration as-is.
+    // It's ok because the resulting object of `prop.enum` doesn't change each call.
+  } else if (isZodInstance(ZodNativeEnum, prop)) {
     return {
       type: prop.enum,
       isNullable: prop.isNullable(),
       isOptional: prop.isOptional(),
       description,
     };
-  } else if (
-    isZodInstance(ZodEnum, prop)
-  ) {
+  } else if (isZodInstance(ZodEnum, prop)) {
     const preregisteredDeclaration = enumsContainer.get(prop);
 
     if (!preregisteredDeclaration) {
@@ -208,8 +205,10 @@ export function getFieldInfoFromZod(
       isNullable: prop.isNullable(),
       description,
     };
-  } else if (isZodInstance(ZodUnion, prop)) {
-    const unionsContainer = typeContainers["Union"];
+  } else if (
+    isZodInstance(ZodUnion, prop) ||
+    isZodInstance(ZodDiscriminatedUnion, prop)
+  ) {
     const preregisteredUnion = unionsContainer.get(prop);
 
     if (!preregisteredUnion) {
