@@ -1,7 +1,8 @@
 import {
   type AnyZodObject,
   type ZodNativeEnum,
-  type ZodUnion,
+  ZodUnion,
+  ZodDiscriminatedUnion,
   ZodObject,
   ZodTypeAny,
   ZodEnum,
@@ -19,6 +20,7 @@ import {
   enumsContainer,
   replacementContainers,
   typeContainers,
+  unionsContainer,
 } from "./containers";
 import { isZodInstance } from "./helpers";
 import { preregisterNested } from "./helpers/preregister-nested";
@@ -130,13 +132,14 @@ export const registerZodEnumType = <
  * Due to GraphQL does not support unions on InputTypes, so this method operates ObjectTypes only.
  * @link https://github.com/graphql/graphql-spec/issues/488
  */
-export const generateUnionTypeFromZod = <T extends ZodUnion<any>>(
+export const generateUnionTypeFromZod = <
+  T extends ZodUnion<any> | ZodDiscriminatedUnion<any, any>,
+>(
   zodUnion: T,
   metadata: TypeMetadata,
   resolveType?: ResolveTypeFn<any, any>,
 ) => {
   // Get types container accordingly to a root class type.
-  const unionsContainer = typeContainers["Union"];
   const objectTypesContainer = typeContainers[ClassType.OBJECT];
 
   const unionItems: any[] = [];
