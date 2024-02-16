@@ -1,4 +1,3 @@
-import type { ZodNumberCheck } from "zod";
 import {
   ZodAny,
   ZodArray,
@@ -18,6 +17,8 @@ import {
   ZodUnion,
   ZodRecord,
   ZodDiscriminatedUnion,
+  ZodNumberCheck,
+  ZodUnknown,
 } from "zod";
 import { isZodInstance } from "../helpers";
 import { enumsContainer, typeContainers, unionsContainer } from "../containers";
@@ -85,7 +86,7 @@ export function getFieldInfoFromZod(
       description,
     };
   } else if (isZodInstance(ZodOptional, prop)) {
-    const { type, isOfArray, isItemNullable, isItemOptional } =
+    const { type, isOfArray, isItemNullable, isItemOptional, isNullable } =
       getFieldInfoFromZod(key, prop.unwrap(), rootClassType);
 
     return {
@@ -94,7 +95,20 @@ export function getFieldInfoFromZod(
       isItemNullable,
       isItemOptional,
       isOptional: true,
-      isNullable: prop.isNullable(),
+      isNullable,
+      description,
+    };
+  } else if (isZodInstance(ZodNullable, prop)) {
+    const { type, isOfArray, isItemNullable, isItemOptional, isOptional } =
+      getFieldInfoFromZod(key, prop.unwrap(), rootClassType);
+
+    return {
+      type,
+      isOfArray,
+      isItemNullable,
+      isItemOptional,
+      isOptional,
+      isNullable: true,
       description,
     };
   } else if (isZodInstance(ZodObject, prop)) {
@@ -151,8 +165,6 @@ export function getFieldInfoFromZod(
     return getFieldInfoFromZod(key, prop._def.innerType, rootClassType);
   } else if (isZodInstance(ZodTransformer, prop)) {
     return getFieldInfoFromZod(key, prop.innerType(), rootClassType);
-  } else if (isZodInstance(ZodNullable, prop)) {
-    return getFieldInfoFromZod(key, prop._def.innerType, rootClassType);
   } else if (isZodInstance(ZodDate, prop)) {
     return {
       type: GraphQLISODateTime,
@@ -161,10 +173,19 @@ export function getFieldInfoFromZod(
       description,
     };
   } else if (isZodInstance(ZodAny, prop)) {
+    // z.any() is both optional and nullable by default, which is inappropriate applying for GraphQL JSON type.
     return {
       type: GraphQLJSON,
-      isNullable: prop.isNullable(),
-      isOptional: prop.isOptional(),
+      isNullable: false,
+      isOptional: false,
+      description,
+    };
+  } else if (isZodInstance(ZodUnknown, prop)) {
+    // z.unknown() is both optional and nullable by default, which is inappropriate applying for GraphQL JSON type.
+    return {
+      type: GraphQLJSON,
+      isNullable: false,
+      isOptional: false,
       description,
     };
   } else if (isZodInstance(ZodLiteral, prop)) {

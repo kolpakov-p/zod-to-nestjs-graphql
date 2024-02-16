@@ -27,9 +27,7 @@ The order in which functions are called is important. You must start from the mo
 * `z.date()` type maps to `GraphQLISODateTime` (from `@nestjs/graphql`).
 * `z.string().uuid()` type maps to `GraphQLUUID` (from `graphql-scalars`).
 * `z.number().int()` type maps to `Int` (from `@nestjs/graphql`).
-* `z.any()` type maps to `GraphQLJSON` (from `graphql-scalars`).
-  But be careful using it, because **`z.any()` is always optional** due to zod architecture.
-  And it will remain the same even in generated GraphQL schema.
+* `z.any()` and `z.unknown()` types maps to `GraphQLJSON` (from `graphql-scalars`).
 * `z.record()` type (with all the arguments) maps to `GraphQLJSONObject` (from `graphql-scalars`).
 
 ## Basic usage
@@ -58,7 +56,7 @@ export const UserEntity = z.object({
   authType: AuthType,
   country: CountryContract,
   dataBin: z.any(),
-  someAmorphousData: z.record(z.string(), z.any())
+  someAmorphousData: z.record(z.string(), z.unknown())
 })
 ```
 
@@ -121,8 +119,7 @@ type User {
 
     country: Country!
     
-    # Will remain optional anyway.     
-    dataBin: GraphQLJSON
+    dataBin: GraphQLJSON!
 
     someAmorphousData: GraphQLJSONObject!
 }
@@ -274,7 +271,7 @@ export const User = generateObjectTypeFromZod(
         // Replace value of “data” in “UserDataContract” (“NestedDataContract”)
         origin: User.shape.data.shape.data,
         // ...with just “GraphQLJSONObject”.
-        replacement: z.record(z.string(), z.any())
+        replacement: z.record(z.string(), z.unknown())
       },
     ],
   }
