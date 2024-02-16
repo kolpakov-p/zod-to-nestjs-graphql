@@ -1,5 +1,14 @@
 import { ClassType } from "@nestjs/graphql/dist/enums/class-type.enum";
-import { AnyZodObject, ZodObject, ZodTypeAny } from "zod";
+import {
+  AnyZodObject,
+  UnknownKeysParam,
+  ZodArray,
+  ZodNullable,
+  ZodObject,
+  ZodOptional,
+  ZodRawShape,
+  ZodTypeAny,
+} from "zod";
 import { typeContainers } from "../containers";
 import { generateClassFromZod } from "../parser";
 import { NameGeneratorFunction } from "../types";
@@ -23,6 +32,36 @@ const inputTypeNameGenerator = (parentKey: string, currentKey: string) => {
   );
 };
 
+const extractWrappedObject = (
+  value: ZodTypeAny,
+):
+  | ZodObject<ZodRawShape, UnknownKeysParam, ZodTypeAny, unknown, unknown>
+  | undefined => {
+  // Return the object if it's found.
+  if (isZodInstance(ZodObject, value)) {
+    return value;
+  }
+
+  // Unwrap objects placed in arrays.
+  if (isZodInstance(ZodArray, value)) {
+    // In case if an object in array is wrapped additionally.
+    return extractWrappedObject(value.element);
+  }
+
+  // Unwrap objects wrapped with optional/nullable.
+  if (isZodInstance(ZodOptional, value) || isZodInstance(ZodNullable, value)) {
+    const firstUnwrap = value.unwrap();
+
+    // In case if an object is wrapped twice.
+    return extractWrappedObject(firstUnwrap);
+  }
+
+  // Just in case.
+  if (value._def?.innerType) {
+    return extractWrappedObject(value._def?.innerType);
+  }
+};
+
 export const preregisterNested = <T extends AnyZodObject>(
   input: T,
   rootClassType: ClassType.OBJECT | ClassType.INPUT,
@@ -37,20 +76,8 @@ export const preregisterNested = <T extends AnyZodObject>(
   const typesContainer = typeContainers[rootClassType];
 
   for (const [key, value] of Object.entries<ZodTypeAny>(input.shape)) {
-    //region Finds an object type because it could be nested.
-    let type: ZodObject<any> | undefined;
-
-    if (isZodInstance(ZodObject, value)) {
-      type = value as ZodObject<any>;
-    }
-
-    if (
-      value._def?.innerType &&
-      isZodInstance(ZodObject, value._def.innerType)
-    ) {
-      type = value._def?.innerType;
-    }
-    //endregion
+    // Finds an object type because it could be nested.
+    const type = extractWrappedObject(value) as ZodObject<any> | undefined;
 
     // Skip if there is no object (a primitive/scalar only).
     if (!type) {
