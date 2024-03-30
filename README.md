@@ -1,7 +1,9 @@
 # zod-to-nestjs-graphql
 A package to generate GraphQL types from `zod` contracts.
 
-Inspired by [`nestjs-graphql-zod` package](https://github.com/incetarik/nestjs-graphql-zod). Thanks to [Tarık İnce](https://github.com/incetarik)! 
+Inspired by [`nestjs-graphql-zod` package](https://github.com/incetarik/nestjs-graphql-zod). Thanks to [Tarık İnce](https://github.com/incetarik)!
+
+[![Hits-of-Code](https://hitsofcode.com/github/kolpakov-p/zod-to-nestjs-graphql?branch=main)](https://hitsofcode.com/github/kolpakov-p/zod-to-nestjs-graphql/view?branch=main)
 
 ## How to use
 
